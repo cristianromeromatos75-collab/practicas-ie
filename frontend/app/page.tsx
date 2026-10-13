@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import Link from 'next/link';
 import { api, Job } from '@/lib/api';
 
 // Componente que carga las ofertas (con fetch)
@@ -32,9 +33,10 @@ async function JobList() {
 
       <div className="grid gap-4">
         {jobs.map((job) => (
-          <article
+          <Link
             key={job.id}
-            className="bg-white p-6 rounded-lg shadow hover:shadow-md transition"
+            href={`/jobs/${job.id}`}
+            className="block bg-white p-6 rounded-lg shadow hover:shadow-md transition"
           >
             <div className="flex justify-between items-start mb-3">
               <h2 className="text-xl font-semibold text-gray-900">
@@ -74,7 +76,7 @@ async function JobList() {
                 {job.is_paid && ' · Remunerado'}
               </span>
             </div>
-          </article>
+          </Link>
         ))}
 
         {jobs.length === 0 && (
@@ -92,10 +94,7 @@ function LoadingJobs() {
   return (
     <div className="space-y-4">
       {[1, 2, 3].map((i) => (
-        <div
-          key={i}
-          className="bg-white p-6 rounded-lg shadow animate-pulse"
-        >
+        <div key={i} className="bg-white p-6 rounded-lg shadow animate-pulse">
           <div className="h-6 bg-gray-200 rounded w-1/3 mb-3"></div>
           <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
           <div className="h-4 bg-gray-200 rounded w-2/3"></div>
