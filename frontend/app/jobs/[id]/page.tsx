@@ -95,7 +95,7 @@ async function JobDetail({ id }: { id: string }) {
       </div>
 
      <div className="border-t pt-6">
-  <ApplyButton jobId={job.id} />
+  <ApplyButton jobId={job.id} jobTitle={job.title} />
 </div>
     </article>
   );

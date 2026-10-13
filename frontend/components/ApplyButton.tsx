@@ -3,31 +3,30 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import ApplyModal from './ApplyModal';
 
 interface ApplyButtonProps {
   jobId: number;
+  jobTitle: string;
 }
 
-export default function ApplyButton({ jobId }: ApplyButtonProps) {
+export default function ApplyButton({ jobId, jobTitle }: ApplyButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [showModal, setShowModal] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   function handleClick() {
     const user = api.getCurrentUser();
     const token = api.getToken();
 
-    // No autenticado → redirige a login
     if (!user || !token) {
       router.push('/login');
       return;
     }
 
-    // No es estudiante → error
     if (user.role !== 'student') {
-      setStatus('error');
       setErrorMsg(
         'Solo los estudiantes pueden postular a ofertas. Tu cuenta es de tipo ' +
           (user.role === 'company' ? 'empresa' : 'mentor') +
@@ -36,37 +35,28 @@ export default function ApplyButton({ jobId }: ApplyButtonProps) {
       return;
     }
 
-    // Es estudiante → mostrar formulario de postulación
-    setStatus('idle');
     setErrorMsg('');
-    // Aquí podría abrirse un modal, pero para simplificar usamos un prompt
-    const msg = prompt(
-      'Opcional: escribe un mensaje para el publicador de la oferta'
-    );
-    submitApplication(msg || '');
+    setShowModal(true);
   }
 
-  async function submitApplication(msg: string) {
+  async function handleSubmit(message: string) {
     setLoading(true);
-    setStatus('idle');
-    setErrorMsg('');
-
     try {
-      await api.applyToJob(jobId, msg);
-      setStatus('success');
-      setMessage('¡Postulación enviada exitosamente!');
+      await api.applyToJob(jobId, message);
+      setShowModal(false);
+      setSuccess(true);
     } catch (e: any) {
-      setStatus('error');
-      setErrorMsg(e.message || 'Error al enviar la postulación');
+      // El error lo maneja el modal
+      throw e;
     } finally {
       setLoading(false);
     }
   }
 
-  if (status === 'success') {
+  if (success) {
     return (
       <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-        <strong>✅ {message}</strong>
+        <strong>✅ ¡Postulación enviada exitosamente!</strong>
         <p className="text-sm mt-1">
           El publicador de la oferta podrá ver tu postulación.
         </p>
@@ -76,7 +66,7 @@ export default function ApplyButton({ jobId }: ApplyButtonProps) {
 
   return (
     <div>
-      {status === 'error' && (
+      {errorMsg && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-3 text-sm">
           {errorMsg}
         </div>
@@ -93,6 +83,14 @@ export default function ApplyButton({ jobId }: ApplyButtonProps) {
       <p className="text-sm text-gray-500 mt-2">
         Debes iniciar sesión como estudiante para postular.
       </p>
+
+      {showModal && (
+        <ApplyModal
+          jobTitle={jobTitle}
+          onClose={() => setShowModal(false)}
+          onSubmit={handleSubmit}
+        />
+      )}
     </div>
   );
 }
