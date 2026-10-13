@@ -46,7 +46,7 @@ export interface JobsResponse {
 export interface User {
   id: number;
   email: string;
-  role: 'student' | 'company' | 'mentor';
+  role: 'student' | 'company' | 'mentor' | 'admin';
   full_name: string;
   is_verified: boolean;
 }
@@ -80,6 +80,10 @@ export interface ApplicationsResponse {
   postulaciones: Application[];
 }
 
+export interface AdminPendingJobsResponse {
+  total: number;
+  ofertas: Job[];
+}
 export interface JobsMineResponse {
   total: number;
   ofertas: Job[];
@@ -252,5 +256,49 @@ async getMyApplications(): Promise<ApplicationsResponse> {
         Authorization: `Bearer ${token}`,
       },
     });
+  },
+
+    async getPendingJobs(): Promise<AdminPendingJobsResponse> {
+    const token = this.getToken();
+    if (!token) {
+      throw new Error('No estás autenticado');
+    }
+    return fetchAPI<AdminPendingJobsResponse>('/admin/pending-jobs', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
+
+  async approveJob(jobId: number) {
+    const token = this.getToken();
+    if (!token) {
+      throw new Error('No estás autenticado');
+    }
+    return fetchAPI<{ mensaje: string; job: Job }>(
+      `/admin/jobs/${jobId}/approve`,
+      {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+  },
+
+  async rejectJob(jobId: number) {
+    const token = this.getToken();
+    if (!token) {
+      throw new Error('No estás autenticado');
+    }
+    return fetchAPI<{ mensaje: string; job: Job }>(
+      `/admin/jobs/${jobId}/reject`,
+      {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
   },
 };
