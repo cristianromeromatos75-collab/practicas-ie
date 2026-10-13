@@ -60,6 +60,23 @@ export interface RegisterResponse {
   token: string;
 }
 
+export interface Application {
+  id: number;
+  status: 'submitted' | 'reviewed' | 'accepted' | 'rejected';
+  message: string | null;
+  created_at: string;
+  job_id: number;
+  title: string;
+  job_type: 'company_internship' | 'research_project' | 'alumni_opportunity';
+  location: string | null;
+  publisher_name: string;
+}
+
+export interface ApplicationsResponse {
+  total: number;
+  postulaciones: Application[];
+}
+
 export const api = {
   async getJobs(filters?: {
     tag?: string;
@@ -150,6 +167,17 @@ export const api = {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ message: message || '' }),
+    });
+  },
+    async getMyApplications(): Promise<ApplicationsResponse> {
+    const token = this.getToken();
+    if (!token) {
+      throw new Error('No estás autenticado');
+    }
+    return fetchAPI<ApplicationsResponse>('/applications/mine', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
   },
 };

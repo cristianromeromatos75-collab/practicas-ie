@@ -60,24 +60,32 @@ export default function Header() {
         </Link>
 
         <nav className="flex items-center gap-4">
-          {user ? (
-            <>
-              <span className="text-sm text-gray-600">
-                Hola, <strong>{user.full_name}</strong>
-                <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 rounded">
-                  {user.role === 'student' && 'Estudiante'}
-                  {user.role === 'company' && 'Empresa'}
-                  {user.role === 'mentor' && 'Mentor'}
-                </span>
-              </span>
-              <button
-                onClick={handleLogout}
-                className="text-sm text-gray-600 hover:text-red-600 transition"
-              >
-                Cerrar sesión
-              </button>
-            </>
-          ) : (
+      {user ? (
+  <>
+    {user.role === 'student' && (
+      <Link
+        href="/my-applications"
+        className="text-sm text-gray-700 hover:text-blue-600 transition"
+      >
+        Mis postulaciones
+      </Link>
+    )}
+    <span className="text-sm text-gray-600">
+      Hola, <strong>{user.full_name}</strong>
+      <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 rounded">
+        {user.role === 'student' && 'Estudiante'}
+        {user.role === 'company' && 'Empresa'}
+        {user.role === 'mentor' && 'Mentor'}
+      </span>
+    </span>
+    <button
+      onClick={handleLogout}
+      className="text-sm text-gray-600 hover:text-red-600 transition"
+    >
+      Cerrar sesión
+    </button>
+  </>
+) : (
             <>
               <Link
                 href="/login"
