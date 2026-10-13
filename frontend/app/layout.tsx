@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import './globals.css';
 import Header from '@/components/Header';
 
@@ -14,7 +15,20 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className="antialiased">
-        <Header />
+        <Suspense
+          fallback={
+            <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+              <div className="max-w-6xl mx-auto px-8 py-4 flex justify-between items-center">
+                <span className="text-xl font-bold text-gray-900">
+                  Prácticas IE
+                </span>
+                <div className="w-32"></div>
+              </div>
+            </header>
+          }
+        >
+          <Header />
+        </Suspense>
         {children}
       </body>
     </html>
