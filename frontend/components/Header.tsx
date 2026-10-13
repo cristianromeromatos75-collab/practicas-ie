@@ -60,7 +60,7 @@ export default function Header() {
         </Link>
 
         <nav className="flex items-center gap-4">
-      {user ? (
+   {user ? (
   <>
     {user.role === 'student' && (
       <Link
@@ -69,6 +69,22 @@ export default function Header() {
       >
         Mis postulaciones
       </Link>
+    )}
+    {(user.role === 'company' || user.role === 'mentor') && (
+      <>
+        <Link
+          href="/my-jobs"
+          className="text-sm text-gray-700 hover:text-blue-600 transition"
+        >
+          Mis ofertas
+        </Link>
+        <Link
+          href="/my-jobs/new"
+          className="text-sm text-gray-700 hover:text-blue-600 transition"
+        >
+          Publicar oferta
+        </Link>
+      </>
     )}
     <span className="text-sm text-gray-600">
       Hola, <strong>{user.full_name}</strong>
