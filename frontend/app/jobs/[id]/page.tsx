@@ -1,3 +1,4 @@
+import ApplyButton from '@/components/ApplyButton';
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -93,14 +94,9 @@ async function JobDetail({ id }: { id: string }) {
         </p>
       </div>
 
-      <div className="border-t pt-6">
-        <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition">
-          Postular a esta oferta
-        </button>
-        <p className="text-sm text-gray-500 mt-2">
-          Debes iniciar sesión como estudiante para postular.
-        </p>
-      </div>
+     <div className="border-t pt-6">
+  <ApplyButton jobId={job.id} />
+</div>
     </article>
   );
 }
