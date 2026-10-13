@@ -86,13 +86,19 @@ export default function Header() {
         </Link>
       </>
     )}
-    <span className="text-sm text-gray-600">
-      Hola, <strong>{user.full_name}</strong>
-      <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 rounded">
-        {user.role === 'student' && 'Estudiante'}
-        {user.role === 'company' && 'Empresa'}
-        {user.role === 'mentor' && 'Mentor'}
-      </span>
+    {user.role === 'admin' && (
+  <Link
+    href="/admin"
+    className="text-sm text-gray-700 hover:text-blue-600 transition font-medium"
+  >
+    Panel Admin
+  </Link>
+)}
+ <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 rounded">
+  {user.role === 'student' && 'Estudiante'}
+  {user.role === 'company' && 'Empresa'}
+  {user.role === 'mentor' && 'Mentor'}
+  {user.role === 'admin' && 'Admin'}
     </span>
     <button
       onClick={handleLogout}
