@@ -77,6 +77,36 @@ export interface ApplicationsResponse {
   postulaciones: Application[];
 }
 
+export interface JobsMineResponse {
+  total: number;
+  ofertas: Job[];
+}
+
+export interface CreateJobPayload {
+  title: string;
+  description: string;
+  tags: string[];
+  job_type: 'company_internship' | 'research_project' | 'alumni_opportunity';
+  location?: string;
+  duration_months?: number;
+  is_paid?: boolean;
+}
+
+export interface Applicant {
+  id: number;
+  status: 'submitted' | 'reviewed' | 'accepted' | 'rejected';
+  message: string | null;
+  created_at: string;
+  student_id: number;
+  full_name: string;
+  email: string;
+}
+
+export interface ApplicantsResponse {
+  total: number;
+  postulantes: Applicant[];
+}
+
 export const api = {
   async getJobs(filters?: {
     tag?: string;
@@ -169,12 +199,50 @@ export const api = {
       body: JSON.stringify({ message: message || '' }),
     });
   },
-    async getMyApplications(): Promise<ApplicationsResponse> {
+  
+async getMyApplications(): Promise<ApplicationsResponse> {
     const token = this.getToken();
     if (!token) {
       throw new Error('No estás autenticado');
     }
     return fetchAPI<ApplicationsResponse>('/applications/mine', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
+    async getMyJobs(): Promise<JobsMineResponse> {
+    const token = this.getToken();
+    if (!token) {
+      throw new Error('No estás autenticado');
+    }
+    return fetchAPI<JobsMineResponse>('/jobs/mine/list', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
+
+  async createJob(payload: CreateJobPayload) {
+    const token = this.getToken();
+    if (!token) {
+      throw new Error('No estás autenticado');
+    }
+    return fetchAPI<{ mensaje: string; job: Job; alertas?: string[] }>('/jobs', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async getJobApplicants(jobId: number): Promise<ApplicantsResponse> {
+    const token = this.getToken();
+    if (!token) {
+      throw new Error('No estás autenticado');
+    }
+    return fetchAPI<ApplicantsResponse>(`/jobs/${jobId}/applicants`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
