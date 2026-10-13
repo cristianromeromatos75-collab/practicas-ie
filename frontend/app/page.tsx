@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { api, Job } from '@/lib/api';
 import FilterBar from '@/components/FilterBar';
 
+const PAGE_SIZE = 5;
+
 async function JobList({
   searchParams,
 }: {
@@ -10,7 +12,13 @@ async function JobList({
 }) {
   const params = await searchParams;
 
+  const currentPage = parseInt(
+    typeof params.page === 'string' ? params.page : '1'
+  ) || 1;
+
   let jobs: Job[] = [];
+  let totalPages = 1;
+  let total = 0;
   let error: string | null = null;
 
   try {
@@ -19,10 +27,26 @@ async function JobList({
       job_type: typeof params.job_type === 'string' ? params.job_type : undefined,
       paid: typeof params.paid === 'string' ? params.paid : undefined,
       search: typeof params.search === 'string' ? params.search : undefined,
+      page: String(currentPage),
+      limit: String(PAGE_SIZE),
     });
     jobs = data.ofertas;
+    total = data.total;
+    totalPages = data.total_pages || 1;
   } catch (e: any) {
     error = e.message;
+  }
+
+  // Función auxiliar para construir URL con los filtros actuales
+  function buildPageUrl(newPage: number) {
+    const urlParams = new URLSearchParams();
+    if (params.tag) urlParams.set('tag', String(params.tag));
+    if (params.job_type) urlParams.set('job_type', String(params.job_type));
+    if (params.paid) urlParams.set('paid', String(params.paid));
+    if (params.search) urlParams.set('search', String(params.search));
+    if (newPage > 1) urlParams.set('page', String(newPage));
+    const qs = urlParams.toString();
+    return qs ? `/?${qs}` : '/';
   }
 
   if (error) {
@@ -39,8 +63,13 @@ async function JobList({
   return (
     <>
       <p className="text-gray-700 mb-6">
-        <strong>{jobs.length}</strong>{' '}
-        {jobs.length === 1 ? 'oferta encontrada' : 'ofertas encontradas'}
+        <strong>{total}</strong>{' '}
+        {total === 1 ? 'oferta encontrada' : 'ofertas encontradas'}
+        {totalPages > 1 && (
+          <span className="text-gray-500 ml-2">
+            · Página {currentPage} de {totalPages}
+          </span>
+        )}
       </p>
 
       <div className="grid gap-4">
@@ -99,6 +128,41 @@ async function JobList({
           </div>
         )}
       </div>
+
+      {/* Paginación */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-4 mt-8">
+          {currentPage > 1 ? (
+            <Link
+              href={buildPageUrl(currentPage - 1)}
+              className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+            >
+              ← Anterior
+            </Link>
+          ) : (
+            <span className="px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-400 cursor-not-allowed">
+              ← Anterior
+            </span>
+          )}
+
+          <span className="text-sm text-gray-600">
+            Página {currentPage} de {totalPages}
+          </span>
+
+          {currentPage < totalPages ? (
+            <Link
+              href={buildPageUrl(currentPage + 1)}
+              className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+            >
+              Siguiente →
+            </Link>
+          ) : (
+            <span className="px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-400 cursor-not-allowed">
+              Siguiente →
+            </span>
+          )}
+        </div>
+      )}
     </>
   );
 }
@@ -134,7 +198,11 @@ export default function Home({
           </p>
         </header>
 
-        <Suspense fallback={<div className="h-40 bg-gray-100 rounded-lg animate-pulse"></div>}>
+        <Suspense
+          fallback={
+            <div className="h-40 bg-gray-100 rounded-lg animate-pulse"></div>
+          }
+        >
           <FilterBar />
         </Suspense>
 

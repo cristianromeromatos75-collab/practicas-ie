@@ -37,6 +37,9 @@ export interface Job {
 
 export interface JobsResponse {
   total: number;
+  page?: number;
+  limit?: number;
+  total_pages?: number;
   ofertas: Job[];
 }
 
@@ -108,13 +111,15 @@ export interface ApplicantsResponse {
 }
 
 export const api = {
-  async getJobs(filters?: {
-    tag?: string;
-    job_type?: string;
-    location?: string;
-    paid?: string;
-    search?: string;
-  }): Promise<JobsResponse> {
+ async getJobs(filters?: {
+  tag?: string;
+  job_type?: string;
+  location?: string;
+  paid?: string;
+  search?: string;
+  page?: string;
+  limit?: string;
+}): Promise<JobsResponse> {
     const params = new URLSearchParams();
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
