@@ -40,6 +40,26 @@ export interface JobsResponse {
   ofertas: Job[];
 }
 
+export interface User {
+  id: number;
+  email: string;
+  role: 'student' | 'company' | 'mentor';
+  full_name: string;
+  is_verified: boolean;
+}
+
+export interface LoginResponse {
+  mensaje: string;
+  user: User;
+  token: string;
+}
+
+export interface RegisterResponse {
+  mensaje: string;
+  user: User;
+  token: string;
+}
+
 export const api = {
   async getJobs(filters?: {
     tag?: string;
@@ -60,5 +80,73 @@ export const api = {
 
   async getJob(id: number) {
     return fetchAPI<{ job: Job }>(`/jobs/${id}`);
+  },
+
+  async login(email: string, password: string): Promise<LoginResponse> {
+    const data = await fetchAPI<LoginResponse>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+    }
+    return data;
+  },
+
+  async register(payload: {
+    email: string;
+    password: string;
+    role: 'student' | 'company' | 'mentor';
+    full_name: string;
+    company_name?: string;
+    ruc?: string;
+  }): Promise<RegisterResponse> {
+    const data = await fetchAPI<RegisterResponse>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+    }
+    return data;
+  },
+
+  logout() {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    }
+  },
+
+  getCurrentUser(): User | null {
+    if (typeof window === 'undefined') return null;
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return null;
+    try {
+      return JSON.parse(userStr);
+    } catch {
+      return null;
+    }
+  },
+
+  getToken(): string | null {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('token');
+  },
+
+  async applyToJob(jobId: number, message?: string) {
+    const token = this.getToken();
+    if (!token) {
+      throw new Error('No estás autenticado');
+    }
+    return fetchAPI<any>(`/jobs/${jobId}/apply`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ message: message || '' }),
+    });
   },
 };
