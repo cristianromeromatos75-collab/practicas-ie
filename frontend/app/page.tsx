@@ -1,14 +1,25 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { api, Job } from '@/lib/api';
+import FilterBar from '@/components/FilterBar';
 
-// Componente que carga las ofertas (con fetch)
-async function JobList() {
+async function JobList({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+
   let jobs: Job[] = [];
   let error: string | null = null;
 
   try {
-    const data = await api.getJobs();
+    const data = await api.getJobs({
+      tag: typeof params.tag === 'string' ? params.tag : undefined,
+      job_type: typeof params.job_type === 'string' ? params.job_type : undefined,
+      paid: typeof params.paid === 'string' ? params.paid : undefined,
+      search: typeof params.search === 'string' ? params.search : undefined,
+    });
     jobs = data.ofertas;
   } catch (e: any) {
     error = e.message;
@@ -28,7 +39,8 @@ async function JobList() {
   return (
     <>
       <p className="text-gray-700 mb-6">
-        <strong>{jobs.length}</strong> ofertas activas
+        <strong>{jobs.length}</strong>{' '}
+        {jobs.length === 1 ? 'oferta encontrada' : 'ofertas encontradas'}
       </p>
 
       <div className="grid gap-4">
@@ -80,16 +92,17 @@ async function JobList() {
         ))}
 
         {jobs.length === 0 && (
-          <p className="text-gray-500 text-center py-8">
-            No hay ofertas disponibles por ahora.
-          </p>
+          <div className="bg-white p-12 rounded-lg shadow text-center">
+            <p className="text-gray-500">
+              No se encontraron ofertas con esos filtros.
+            </p>
+          </div>
         )}
       </div>
     </>
   );
 }
 
-// Placeholder mientras carga
 function LoadingJobs() {
   return (
     <div className="space-y-4">
@@ -104,8 +117,11 @@ function LoadingJobs() {
   );
 }
 
-// Página principal
-export default function Home() {
+export default function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   return (
     <main className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
@@ -118,8 +134,12 @@ export default function Home() {
           </p>
         </header>
 
+        <Suspense fallback={<div className="h-40 bg-gray-100 rounded-lg animate-pulse"></div>}>
+          <FilterBar />
+        </Suspense>
+
         <Suspense fallback={<LoadingJobs />}>
-          <JobList />
+          <JobList searchParams={searchParams} />
         </Suspense>
       </div>
     </main>
