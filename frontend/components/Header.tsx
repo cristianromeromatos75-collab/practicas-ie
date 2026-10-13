@@ -2,17 +2,34 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { api, User } from '@/lib/api';
 
 export default function Header() {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     setUser(api.getCurrentUser());
+  }, []);
+
+  // Re-leer el usuario cada vez que cambie la ruta
+  useEffect(() => {
+    setUser(api.getCurrentUser());
+  }, [pathname]);
+
+  // Escuchar el evento personalizado 'auth-change'
+  useEffect(() => {
+    function handleAuthChange() {
+      setUser(api.getCurrentUser());
+    }
+    window.addEventListener('auth-change', handleAuthChange);
+    return () => {
+      window.removeEventListener('auth-change', handleAuthChange);
+    };
   }, []);
 
   function handleLogout() {
@@ -22,7 +39,6 @@ export default function Header() {
     router.refresh();
   }
 
-  // Evita el flash de "Iniciar sesión" antes de leer localStorage
   if (!mounted) {
     return (
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
