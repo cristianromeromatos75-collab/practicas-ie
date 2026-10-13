@@ -99,7 +99,12 @@ async function createJob(req, res) {
 // LISTAR OFERTAS (con filtros)
 // ============================================
 async function listJobs(req, res) {
-  const { tag, job_type, location, paid, search } = req.query;
+  const { tag, job_type, location, paid, search, page, limit } = req.query;
+
+  // Paginación
+  const currentPage = Math.max(1, parseInt(page) || 1);
+  const perPage = Math.min(50, Math.max(1, parseInt(limit) || 10));
+  const offset = (currentPage - 1) * perPage;
 
   const conditions = ["j.status = 'active'"];
   const params = [];
@@ -129,6 +134,14 @@ async function listJobs(req, res) {
     conditions.push(`(j.title ILIKE $${params.length} OR j.description ILIKE $${params.length})`);
   }
 
+  const countQuery = `
+    SELECT COUNT(*) AS total
+    FROM jobs j
+    JOIN users u ON j.publisher_id = u.id
+    LEFT JOIN company_profiles cp ON cp.user_id = u.id
+    WHERE ${conditions.join(' AND ')}
+  `;
+
   const query = `
     SELECT 
       j.id, j.title, j.description, j.tags, j.job_type,
@@ -140,13 +153,22 @@ async function listJobs(req, res) {
     LEFT JOIN company_profiles cp ON cp.user_id = u.id
     WHERE ${conditions.join(' AND ')}
     ORDER BY j.created_at DESC
-    LIMIT 100
+    LIMIT $${params.length + 1} OFFSET $${params.length + 2}
   `;
 
   try {
-    const result = await pool.query(query, params);
+    const countResult = await pool.query(countQuery, params);
+    const total = parseInt(countResult.rows[0].total);
+
+    const result = await pool.query(query, [...params, perPage, offset]);
+
+    const totalPages = Math.ceil(total / perPage);
+
     res.json({ 
-      total: result.rows.length,
+      total,
+      page: currentPage,
+      limit: perPage,
+      total_pages: totalPages,
       ofertas: result.rows 
     });
   } catch (error) {
